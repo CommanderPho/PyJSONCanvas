@@ -1,10 +1,29 @@
 # models.py
+import sys
+
+# Check Python version
+PY_310_OR_HIGHER = sys.version_info >= (3, 10)
+
+# Use conditional dataclass decorator based on Python version
+if PY_310_OR_HIGHER:
+    def version_compatible_dataclass(*args, **kwargs):
+        from dataclasses import dataclass
+        return dataclass(*args, **kwargs)
+else:
+    def version_compatible_dataclass(*args, **kwargs):
+        from dataclasses import dataclass
+        # Remove kw_only for Python < 3.10
+        if 'kw_only' in kwargs:
+            kwargs.pop('kw_only')
+        return dataclass(*args, **kwargs)
+
+from dataclasses import field
+
 from typing import Dict, Any
-from dataclasses import dataclass
 from enum import Enum
 from .exceptions import InvalidColorValueError
 import uuid
-from dataclasses import field
+
 from . import validate_node, validate_edge
 
 
@@ -80,7 +99,7 @@ class GroupNodeBackgroundStyle(Enum):
     REPEAT = "repeat"
 
 
-@dataclass
+@version_compatible_dataclass
 class Edge:
     fromNode: str
     toNode: str
@@ -124,7 +143,7 @@ class Edge:
         }
 
 
-@dataclass
+@version_compatible_dataclass
 class GenericNode:
     type: NodeType
     x: int
@@ -155,7 +174,7 @@ class GenericNode:
         }
 
 
-@dataclass(kw_only=True)
+@version_compatible_dataclass(kw_only=True)
 class TextNode(GenericNode):
     text: str = field(default="", init=True)
     type: NodeType = NodeType.TEXT
@@ -170,7 +189,7 @@ class TextNode(GenericNode):
         return super().to_dict() | {"text": self.text}
 
 
-@dataclass(kw_only=True)
+@version_compatible_dataclass(kw_only=True)
 class FileNode(GenericNode):
     file: str
     type: NodeType = NodeType.FILE
@@ -186,7 +205,7 @@ class FileNode(GenericNode):
         return super().to_dict() | {"file": self.file, "subpath": self.subpath}
 
 
-@dataclass(kw_only=True)
+@version_compatible_dataclass(kw_only=True)
 class LinkNode(GenericNode):
     url: str
     type: NodeType = NodeType.LINK
@@ -201,7 +220,7 @@ class LinkNode(GenericNode):
         return super().to_dict() | {"url": self.url}
 
 
-@dataclass(kw_only=True)
+@version_compatible_dataclass(kw_only=True)
 class GroupNode(GenericNode):
     type: NodeType = NodeType.GROUP
     label: str = None
