@@ -13,13 +13,49 @@ if PY_310_OR_HIGHER:
         return dataclass(*args, **kwargs)
 else:
     def version_compatible_dataclass(*args, **kwargs):
-        from dataclasses import dataclass
-        # Remove kw_only for Python < 3.10
-        if 'kw_only' in kwargs:
-            kwargs.pop('kw_only')
-        return dataclass(*args, **kwargs)
-
+        """Emulate kw_only behavior for Python < 3.10"""
+        from dataclasses import dataclass, _MISSING_TYPE
+        
+        # Store if kw_only was requested
+        kw_only_requested = kwargs.pop('kw_only', False)
+        
+        # Define a class decorator that will process the class
+        def wrap(cls):
+            # Apply standard dataclass decorator first
+            dc_cls = dataclass(**kwargs)(cls)
+            
+            # If kw_only was requested, we need to modify the __init__ method
+            if kw_only_requested or True: ## always allow extra fields
+                # Get the original __init__ method
+                orig_init = dc_cls.__init__
+                
+                # Get the field names from the dataclass
+                field_names = set(f.name for f in dc_cls.__dataclass_fields__.values())
+                
+                # Create a new __init__ that emulates keyword-only arguments
+                # and ignores extra keywords
+                def __init__(self, **kwargs):
+                    # Filter out kwargs that aren't fields in the dataclass
+                    filtered_kwargs = {k: v for k, v in kwargs.items() if k in field_names}
+                    # Call the original __init__ with filtered keyword arguments
+                    orig_init(self, **filtered_kwargs)
+                
+                # Replace the __init__ method
+                dc_cls.__init__ = __init__
+                
+                # Add a marker to indicate this class uses kw_only
+                setattr(dc_cls, '_kw_only', True)
+            
+            return dc_cls
+        
+        # If called with a class, apply the decorator directly
+        if args and isinstance(args[0], type):
+            return wrap(args[0])
+        
+        # Otherwise, return the decorator
+        return wrap
     
+
 from enum import Enum
 from .exceptions import InvalidColorValueError
 import uuid
