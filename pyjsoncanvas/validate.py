@@ -1,5 +1,5 @@
 # validate.py
-
+import numbers
 
 # second param for no exceptions only return bool
 def validate_node(node) -> bool:
@@ -25,16 +25,16 @@ def validate_node(node) -> bool:
     if not isinstance(node.type, NodeType):
         raise InvalidNodeTypeError("Node type is invalid or missing.")
 
-    if not isinstance(node.x, int):
+    if not isinstance(node.x, numbers.Integral):
         raise InvalidNodeAttributeError("Node x is invalid or missing.")
 
-    if not isinstance(node.y, int):
+    if not isinstance(node.y, numbers.Integral):
         raise InvalidNodeAttributeError("Node y is invalid or missing.")
 
-    if not isinstance(node.width, int):
+    if not isinstance(node.width, numbers.Integral):
         raise InvalidNodeAttributeError("Node width is invalid or missing.")
 
-    if not isinstance(node.height, int):
+    if not isinstance(node.height, numbers.Integral):
         raise InvalidNodeAttributeError("Node height is invalid or missing.")
 
     if node.color is not None and not isinstance(node.color, Color):
