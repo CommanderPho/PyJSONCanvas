@@ -25,14 +25,20 @@ else:
             dc_cls = dataclass(**kwargs)(cls)
             
             # If kw_only was requested, we need to modify the __init__ method
-            if kw_only_requested:
+            if kw_only_requested or True: ## always allow extra fields
                 # Get the original __init__ method
                 orig_init = dc_cls.__init__
                 
-                # Create a new __init__ that enforces keyword-only arguments
+                # Get the field names from the dataclass
+                field_names = set(f.name for f in dc_cls.__dataclass_fields__.values())
+                
+                # Create a new __init__ that emulates keyword-only arguments
+                # and ignores extra keywords
                 def __init__(self, **kwargs):
-                    # Call the original __init__ with keyword arguments
-                    orig_init(self, **kwargs)
+                    # Filter out kwargs that aren't fields in the dataclass
+                    filtered_kwargs = {k: v for k, v in kwargs.items() if k in field_names}
+                    # Call the original __init__ with filtered keyword arguments
+                    orig_init(self, **filtered_kwargs)
                 
                 # Replace the __init__ method
                 dc_cls.__init__ = __init__
