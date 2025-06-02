@@ -188,6 +188,17 @@ class GenericNode:
     height: int = field(default=100)
     color: Color = field(default=None)
     id: str = field(default_factory=lambda: uuid.uuid4().hex[:16])
+    
+    @property
+    def x1(self) -> int:
+        """The right x-position of the node."""
+        return self.x + self.width
+
+    @property
+    def y1(self) -> int:
+        """The bottom y-position of the node."""
+        return self.y + self.height
+
 
     def __post_init__(self):
         if isinstance(self.color, str):
