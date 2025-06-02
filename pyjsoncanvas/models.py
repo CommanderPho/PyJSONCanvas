@@ -209,16 +209,30 @@ class GenericNode:
             return False
         return self.id == other.id
 
-    def to_dict(self) -> Dict[str, Any]:
-        return {
-            "type": self.type,
-            "id": self.id,
-            "x": self.x,
-            "y": self.y,
-            "width": self.width,
-            "height": self.height,
-            "color": self.color,
-        }
+    def to_dict(self, include_computed:bool=False) -> Dict[str, Any]:
+        if not include_computed:
+            return {
+                "type": self.type,
+                "id": self.id,
+                "x": self.x,
+                "y": self.y,
+                "width": self.width,
+                "height": self.height,
+                "color": self.color,
+            }
+        else:
+            return {
+                "type": self.type,
+                "id": self.id,
+                "x": self.x,
+                "y": self.y,
+                "x1": self.x1,
+                "y1": self.y1,
+                "width": self.width,
+                "height": self.height,
+                "color": self.color,
+            }
+
 
 
 @version_compatible_dataclass(kw_only=True)
@@ -232,8 +246,8 @@ class TextNode(GenericNode):
             self.type = NodeType("text")
         validate_node(self)
 
-    def to_dict(self) -> Dict[str, Any]:
-        return super().to_dict() | {"text": self.text}
+    def to_dict(self, include_computed:bool=False) -> Dict[str, Any]:
+        return super().to_dict(include_computed=include_computed) | {"text": self.text}
 
 
 @version_compatible_dataclass(kw_only=True)
@@ -248,8 +262,8 @@ class FileNode(GenericNode):
             self.type = NodeType("file")
         validate_node(self)
 
-    def to_dict(self) -> Dict[str, Any]:
-        return super().to_dict() | {"file": self.file, "subpath": self.subpath}
+    def to_dict(self, include_computed:bool=False) -> Dict[str, Any]:
+        return super().to_dict(include_computed=include_computed) | {"file": self.file, "subpath": self.subpath}
 
 
 @version_compatible_dataclass(kw_only=True)
@@ -263,8 +277,8 @@ class LinkNode(GenericNode):
             self.type = NodeType("link")
         validate_node(self)
 
-    def to_dict(self) -> Dict[str, Any]:
-        return super().to_dict() | {"url": self.url}
+    def to_dict(self, include_computed:bool=False) -> Dict[str, Any]:
+        return super().to_dict(include_computed=include_computed) | {"url": self.url}
 
 
 @version_compatible_dataclass(kw_only=True)
@@ -282,8 +296,8 @@ class GroupNode(GenericNode):
             self.backgroundStyle = GroupNodeBackgroundStyle(self.backgroundStyle)
         validate_node(self)
 
-    def to_dict(self) -> Dict[str, Any]:
-        return super().to_dict() | {
+    def to_dict(self, include_computed:bool=False) -> Dict[str, Any]:
+        return super().to_dict(include_computed=include_computed) | {
             "label": self.label,
             "background": self.background,
             "backgroundStyle": self.backgroundStyle,
