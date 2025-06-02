@@ -209,6 +209,9 @@ class GenericNode:
             return False
         return self.id == other.id
 
+    def __hash__(self):
+        return hash(self.id)
+
     def to_dict(self, include_computed:bool=False) -> Dict[str, Any]:
         if not include_computed:
             return {
