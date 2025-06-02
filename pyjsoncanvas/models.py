@@ -249,6 +249,9 @@ class TextNode(GenericNode):
             self.type = NodeType("text")
         validate_node(self)
 
+    def __hash__(self):
+        return hash(self.id)
+    
     def to_dict(self, include_computed:bool=False) -> Dict[str, Any]:
         return super().to_dict(include_computed=include_computed) | {"text": self.text}
 
@@ -265,6 +268,9 @@ class FileNode(GenericNode):
             self.type = NodeType("file")
         validate_node(self)
 
+    def __hash__(self):
+        return hash(self.id)
+    
     def to_dict(self, include_computed:bool=False) -> Dict[str, Any]:
         return super().to_dict(include_computed=include_computed) | {"file": self.file, "subpath": self.subpath}
 
@@ -280,6 +286,9 @@ class LinkNode(GenericNode):
             self.type = NodeType("link")
         validate_node(self)
 
+    def __hash__(self):
+        return hash(self.id)
+    
     def to_dict(self, include_computed:bool=False) -> Dict[str, Any]:
         return super().to_dict(include_computed=include_computed) | {"url": self.url}
 
@@ -299,6 +308,9 @@ class GroupNode(GenericNode):
             self.backgroundStyle = GroupNodeBackgroundStyle(self.backgroundStyle)
         validate_node(self)
 
+    def __hash__(self):
+        return hash(self.id)
+    
     def to_dict(self, include_computed:bool=False) -> Dict[str, Any]:
         return super().to_dict(include_computed=include_computed) | {
             "label": self.label,
