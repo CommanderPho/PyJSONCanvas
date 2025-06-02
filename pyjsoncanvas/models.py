@@ -1,7 +1,7 @@
 # models.py
 import sys
 from dataclasses import field
-from typing import Any, Dict
+from typing import Any, Dict, List, Set, Tuple, Optional
 
 # Check Python version
 PY_310_OR_HIGHER = sys.version_info >= (3, 10)
@@ -302,3 +302,33 @@ class GroupNode(GenericNode):
             "background": self.background,
             "backgroundStyle": self.backgroundStyle,
         }
+
+
+    def does_contain(self, putative_child_node: GenericNode) -> bool:
+        """ returns True IFF the putative_child_node is completely contained within this GroupNode's bounds. 
+        """
+        if self == putative_child_node:
+            return False ## definitionally, a node will not contain itself
+        
+        if (putative_child_node.x < self.x):
+            return False ## child's left edge is outside to the left
+        elif (putative_child_node.x1 > self.x1):
+            return False ## child's right edge is outside to the right
+        elif (putative_child_node.y < self.y):
+            return False ## child's bottom edge is outside below
+        elif (putative_child_node.y1 > self.y1):
+            return False ## child's top-edge is outside above
+        else:
+            return True
+        
+
+    def find_children(self, putative_child_nodes: List[GenericNode]) -> List[GenericNode]:
+        """ for the list of potentially contained nodes, returns the filtered list of only those nodes completely contained within this GroupNode's bounds (e.g. children). 
+        """
+        found_children_list = []
+        for a_putative_child in putative_child_nodes:
+            if self.does_contain(putative_child_node=a_putative_child):
+                found_children_list.append(a_putative_child)
+                
+        return found_children_list
+
