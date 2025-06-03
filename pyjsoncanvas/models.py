@@ -1,7 +1,7 @@
 # models.py
 import sys
 from dataclasses import field
-from typing import Any, Dict, List, Set, Tuple, Optional
+from typing import Any, Dict, List, Set, Tuple, Optional, Union
 
 # Check Python version
 PY_310_OR_HIGHER = sys.version_info >= (3, 10)
@@ -322,9 +322,9 @@ class GroupNode(GenericNode):
     def does_contain(self, putative_child_node: GenericNode) -> bool:
         """ returns True IFF the putative_child_node is completely contained within this GroupNode's bounds. 
         """
-        if self == putative_child_node:
+        if (self.id == putative_child_node.id):
             return False ## definitionally, a node will not contain itself
-        
+    
         if (putative_child_node.x < self.x):
             return False ## child's left edge is outside to the left
         elif (putative_child_node.x1 > self.x1):
@@ -346,4 +346,24 @@ class GroupNode(GenericNode):
                 found_children_list.append(a_putative_child)
                 
         return found_children_list
+
+
+    # def find_children_recurrsively(self, putative_child_nodes: List[GenericNode]) -> List[Union[GenericNode, Dict[GroupNode, Dict[GroupNode, GenericNode]]]]:
+    #     """ for the list of potentially contained nodes, returns the filtered list of only those nodes completely contained within this GroupNode's bounds (e.g. children). 
+    #     """
+    #     found_children_list = []
+    #     for a_putative_child in putative_child_nodes:
+    #         if self.does_contain(putative_child_node=a_putative_child):
+    #             if a_putative_child.type.value == NodeType.GROUP.value:
+    #                 # found_children_list.append(a_putative_child)
+    #                 if a_putative_child.find_children_recurrsively(putative_child_nodes=putative_child_nodes)
+    #                 found_children_list.append(a_putative_child)
+    #             else:
+    #                 ## non-group, just add the child:
+    #                 found_children_list.append(a_putative_child)
+
+
+    #     return found_children_list
+
+
 
