@@ -1,7 +1,7 @@
 # models.py
 import sys
 from dataclasses import field
-from typing import Any, Dict
+from typing import Any, Dict, List, Set, Tuple, Optional, Union
 
 # Check Python version
 PY_310_OR_HIGHER = sys.version_info >= (3, 10)
@@ -188,6 +188,17 @@ class GenericNode:
     height: int = field(default=100)
     color: Color = field(default=None)
     id: str = field(default_factory=lambda: uuid.uuid4().hex[:16])
+    
+    @property
+    def x1(self) -> int:
+        """The right x-position of the node."""
+        return self.x + self.width
+
+    @property
+    def y1(self) -> int:
+        """The bottom y-position of the node."""
+        return self.y + self.height
+
 
     def __post_init__(self):
         if isinstance(self.color, str):
@@ -198,16 +209,33 @@ class GenericNode:
             return False
         return self.id == other.id
 
-    def to_dict(self) -> Dict[str, Any]:
-        return {
-            "type": self.type,
-            "id": self.id,
-            "x": self.x,
-            "y": self.y,
-            "width": self.width,
-            "height": self.height,
-            "color": self.color,
-        }
+    def __hash__(self):
+        return hash(self.id)
+
+    def to_dict(self, include_computed:bool=False) -> Dict[str, Any]:
+        if not include_computed:
+            return {
+                "type": self.type,
+                "id": self.id,
+                "x": self.x,
+                "y": self.y,
+                "width": self.width,
+                "height": self.height,
+                "color": self.color,
+            }
+        else:
+            return {
+                "type": self.type,
+                "id": self.id,
+                "x": self.x,
+                "y": self.y,
+                "x1": self.x1,
+                "y1": self.y1,
+                "width": self.width,
+                "height": self.height,
+                "color": self.color,
+            }
+
 
 
 @version_compatible_dataclass(kw_only=True)
@@ -221,8 +249,11 @@ class TextNode(GenericNode):
             self.type = NodeType("text")
         validate_node(self)
 
-    def to_dict(self) -> Dict[str, Any]:
-        return super().to_dict() | {"text": self.text}
+    def __hash__(self):
+        return hash(self.id)
+    
+    def to_dict(self, include_computed:bool=False) -> Dict[str, Any]:
+        return super().to_dict(include_computed=include_computed) | {"text": self.text}
 
 
 @version_compatible_dataclass(kw_only=True)
@@ -237,8 +268,11 @@ class FileNode(GenericNode):
             self.type = NodeType("file")
         validate_node(self)
 
-    def to_dict(self) -> Dict[str, Any]:
-        return super().to_dict() | {"file": self.file, "subpath": self.subpath}
+    def __hash__(self):
+        return hash(self.id)
+    
+    def to_dict(self, include_computed:bool=False) -> Dict[str, Any]:
+        return super().to_dict(include_computed=include_computed) | {"file": self.file, "subpath": self.subpath}
 
 
 @version_compatible_dataclass(kw_only=True)
@@ -252,8 +286,11 @@ class LinkNode(GenericNode):
             self.type = NodeType("link")
         validate_node(self)
 
-    def to_dict(self) -> Dict[str, Any]:
-        return super().to_dict() | {"url": self.url}
+    def __hash__(self):
+        return hash(self.id)
+    
+    def to_dict(self, include_computed:bool=False) -> Dict[str, Any]:
+        return super().to_dict(include_computed=include_computed) | {"url": self.url}
 
 
 @version_compatible_dataclass(kw_only=True)
@@ -271,9 +308,62 @@ class GroupNode(GenericNode):
             self.backgroundStyle = GroupNodeBackgroundStyle(self.backgroundStyle)
         validate_node(self)
 
-    def to_dict(self) -> Dict[str, Any]:
-        return super().to_dict() | {
+    def __hash__(self):
+        return hash(self.id)
+    
+    def to_dict(self, include_computed:bool=False) -> Dict[str, Any]:
+        return super().to_dict(include_computed=include_computed) | {
             "label": self.label,
             "background": self.background,
             "backgroundStyle": self.backgroundStyle,
         }
+
+
+    def does_contain(self, putative_child_node: GenericNode) -> bool:
+        """ returns True IFF the putative_child_node is completely contained within this GroupNode's bounds. 
+        """
+        if (self.id == putative_child_node.id):
+            return False ## definitionally, a node will not contain itself
+    
+        if (putative_child_node.x < self.x):
+            return False ## child's left edge is outside to the left
+        elif (putative_child_node.x1 > self.x1):
+            return False ## child's right edge is outside to the right
+        elif (putative_child_node.y < self.y):
+            return False ## child's bottom edge is outside below
+        elif (putative_child_node.y1 > self.y1):
+            return False ## child's top-edge is outside above
+        else:
+            return True
+        
+
+    def find_children(self, putative_child_nodes: List[GenericNode]) -> List[GenericNode]:
+        """ for the list of potentially contained nodes, returns the filtered list of only those nodes completely contained within this GroupNode's bounds (e.g. children). 
+        """
+        found_children_list = []
+        for a_putative_child in putative_child_nodes:
+            if self.does_contain(putative_child_node=a_putative_child):
+                found_children_list.append(a_putative_child)
+                
+        return found_children_list
+
+
+    # def find_children_recurrsively(self, putative_child_nodes: List[GenericNode]) -> List[Union[GenericNode, Dict[GroupNode, Dict[GroupNode, GenericNode]]]]:
+    #     """ for the list of potentially contained nodes, returns the filtered list of only those nodes completely contained within this GroupNode's bounds (e.g. children). 
+    #     """
+    #     found_children_list = []
+    #     for a_putative_child in putative_child_nodes:
+    #         if self.does_contain(putative_child_node=a_putative_child):
+    #             if a_putative_child.type.value == NodeType.GROUP.value:
+    #                 # found_children_list.append(a_putative_child)
+    #                 if a_putative_child.find_children_recurrsively(putative_child_nodes=putative_child_nodes)
+    #                 found_children_list.append(a_putative_child)
+    #             else:
+    #                 ## non-group, just add the child:
+    #                 found_children_list.append(a_putative_child)
+
+
+    #     return found_children_list
+
+
+

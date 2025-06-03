@@ -1,4 +1,6 @@
 # jsoncanvas.py
+from copy import deepcopy
+from typing import Dict, List, Tuple, Set, Optional, Callable, Union, Any
 from dataclasses import dataclass
 from .models import (
     Edge,
@@ -9,7 +11,7 @@ from .models import (
     LinkNode,
     GroupNode,
 )
-from typing import List, Dict, Any, Tuple
+from typing import List, Dict, Any, Optional, Tuple
 from .exceptions import (
     InvalidNodeTypeError,
     InvalidEdgeAttributeError,
@@ -167,3 +169,33 @@ class Canvas:
             for edge in self.edges
             if edge.fromNode == node_id
         ]
+
+
+    @classmethod
+    def find_group_node_with_label(cls, loaded_group_nodes: List[GroupNode], search_group_node_label: str) -> Optional[GroupNode]:
+        """ finds and returns the group node with the specified label
+        """
+        found_group_node = None
+        for a_group_node in loaded_group_nodes:
+            if found_group_node is None: ## not yet found
+                if (a_group_node.label == search_group_node_label):
+                    ## found match
+                    found_group_node = deepcopy(a_group_node)
+
+
+        return found_group_node
+
+
+    @classmethod
+    def recurrsively_find_nested_groups(cls, a_group_node: GroupNode, remaining_canvas_nodes: Set[GenericNode]) -> Dict:
+        if len(remaining_canvas_nodes) == 0:
+            return {}
+        else:
+            _out_dict = {}
+            found_children_nodes = a_group_node.find_children(remaining_canvas_nodes)
+            ## find group nodes
+            curr_found_subgroup_nodes: Set[GroupNode] = set([v for v in found_children_nodes if (v.type.value == NodeType.GROUP.value)])
+            _out_dict.update({v:cls.recurrsively_find_nested_groups(a_group_node=v, remaining_canvas_nodes=found_children_nodes) for v in found_children_nodes if (v.type.value == NodeType.GROUP.value)})
+
+            _out_dict[a_group_node] = found_group_children ## need to recurrsively search for group nodes and therefore children here
+            return _out_dict
